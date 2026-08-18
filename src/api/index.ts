@@ -1,0 +1,74 @@
+import { apiClient } from './client';
+
+export const USER_ID_DUMMY = '00000000-0000-0000-0000-000000000000';
+
+export interface Journey {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+}
+
+export interface Child {
+  id: string;
+  journey_id: string;
+  name: string;
+  birthday: string;
+}
+
+export interface Milestone {
+  id: string;
+  journey_id: string;
+  title: string;
+  description?: string;
+  occurred_at: string;
+  memories?: Memory[];
+}
+
+export interface Memory {
+  id: string;
+  milestone_id: string;
+  title: string;
+  description?: string;
+  occurred_at: string;
+  media?: Media[];
+}
+
+export interface Media {
+  id: string;
+  memory_id: string;
+  type: 'PHOTO' | 'VIDEO';
+  storage_key: string;
+}
+
+export const createJourney = async (title: string): Promise<Journey> => {
+  const response = await apiClient.post('/journeys', {
+    user_id: USER_ID_DUMMY,
+    title,
+  });
+  return response.data;
+};
+
+export const createChild = async (journey_id: string, name: string, birthday: string): Promise<Child> => {
+  const response = await apiClient.post('/children', {
+    journey_id,
+    name,
+    birthday,
+  });
+  return response.data;
+};
+
+export const getJourneys = async (): Promise<Journey[]> => {
+  const response = await apiClient.get('/journeys');
+  return response.data;
+};
+
+export const getChildren = async (journey_id: string): Promise<Child[]> => {
+  const response = await apiClient.get(`/children?journey_id=${journey_id}`);
+  return response.data;
+};
+
+export const getMilestones = async (journey_id: string): Promise<Milestone[]> => {
+  const response = await apiClient.get(`/milestones?journey_id=${journey_id}`);
+  return response.data;
+};
