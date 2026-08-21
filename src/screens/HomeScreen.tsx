@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Plus } from 'lucide-react-native';
 import { Typography } from '../components/Typography';
 import { Timeline } from '../components/Timeline';
@@ -109,7 +110,7 @@ export const HomeScreen = ({ navigation }: any) => {
       <TouchableOpacity 
         style={styles.fab} 
         activeOpacity={0.8}
-        onPress={() => console.log('Navigate to Add Milestone screen')}
+        onPress={() => navigation.navigate('AddMilestone')}
       >
         <Plus color={colors.white} size={28} />
       </TouchableOpacity>
@@ -123,9 +124,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   patternBackground: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.background, // We'll add an SVG pattern later if needed
-    opacity: 0.05, // Very subtle pattern
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.background,
+    opacity: 0.05,
   },
   centerContainer: {
     flex: 1,

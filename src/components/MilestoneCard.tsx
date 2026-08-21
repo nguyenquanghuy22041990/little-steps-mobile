@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { Typography } from './Typography';
 import { Card } from './Card';
 import { colors, spacing, radius } from '../theme';
 import { Milestone } from '../api';
+import { getStorageUrl } from '../api/client';
 
 interface MilestoneCardProps {
   milestone: Milestone;
@@ -28,27 +29,58 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, onPress
       </View>
 
       {/* Content */}
-      <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.contentColumn}>
+      <View style={styles.contentColumn}>
         <Typography variant="label" color={colors.primary} style={styles.date}>
           {dateString}
         </Typography>
         
         <Card style={styles.card}>
-          <Typography variant="h3" style={styles.title}>{milestone.title}</Typography>
-          {milestone.description ? (
-            <Typography variant="body" color={colors.textSecondary} style={styles.description}>
-              {milestone.description}
-            </Typography>
-          ) : null}
+          <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
+            <Typography variant="h3" style={styles.title}>{milestone.title}</Typography>
+            {milestone.description ? (
+              <Typography variant="body" color={colors.textSecondary} style={styles.description}>
+                {milestone.description}
+              </Typography>
+            ) : (milestone.memories && milestone.memories.length > 0 && milestone.memories[0].description) ? (
+              <Typography variant="body" color={colors.textSecondary} style={styles.description}>
+                {milestone.memories[0].description}
+              </Typography>
+            ) : null}
+          </TouchableOpacity>
           
-          {/* Photos indicators could go here */}
-          {milestone.memories && milestone.memories.length > 0 && (
+          {/* Photos Carousel */}
+          {milestone.memories && milestone.memories.length > 0 && milestone.memories[0].media && milestone.memories[0].media.length > 0 && (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.photoCarousel}
+              contentContainerStyle={styles.photoCarouselContent}
+              snapToInterval={260} // Width + gap
+              decelerationRate="fast"
+            >
+              {milestone.memories[0].media.map((mediaItem) => (
+                <View key={mediaItem.id} style={styles.photoWrapper}>
+                  <Image 
+                    source={{ uri: getStorageUrl(mediaItem.storage_key) }} 
+                    style={[
+                      styles.photo, 
+                      milestone.memories![0].media!.length === 1 ? styles.photoSingle : styles.photoMultiple
+                    ]} 
+                    resizeMode="cover"
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Memories indicator fallback */}
+          {milestone.memories && milestone.memories.length > 0 && (!milestone.memories[0].media || milestone.memories[0].media.length === 0) && (
             <Typography variant="caption" color={colors.primary} style={styles.memoryCount}>
               {milestone.memories.length} Memories
             </Typography>
           )}
         </Card>
-      </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -97,5 +129,26 @@ const styles = StyleSheet.create({
   memoryCount: {
     marginTop: spacing.md,
     fontWeight: '600',
+  },
+  photoCarousel: {
+    marginTop: spacing.md,
+    marginHorizontal: -spacing.md, // Bleed to edges of card
+  },
+  photoCarouselContent: {
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  photoWrapper: {
+    borderRadius: radius.md,
+    overflow: 'hidden',
+  },
+  photo: {
+    height: 180,
+  },
+  photoSingle: {
+    width: 250, // Better aspect ratio for single image
+  },
+  photoMultiple: {
+    width: 250, // Slightly cropped to hint at horizontal scrolling
   }
 });

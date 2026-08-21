@@ -60,7 +60,14 @@ export const OnboardingScreen = ({ navigation }: any) => {
       // Navigate to Home timeline
       navigation.replace('Home');
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Could not save profile. Please ensure the backend is running.');
+      let errorMessage = 'Could not save profile. Please ensure the backend is running.';
+      console.log("ERROR: ", error);
+      if (error.response?.data?.message) {
+        errorMessage = Array.isArray(error.response.data.message) 
+          ? error.response.data.message.join(', ') 
+          : error.response.data.message;
+      }
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }

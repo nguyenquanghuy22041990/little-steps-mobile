@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 
-export const USER_ID_DUMMY = '00000000-0000-0000-0000-000000000000';
+export const USER_ID_DUMMY = 'd1b764cb-58a4-47ed-87cb-1555df6d0b57';
 
 export interface Journey {
   id: string;

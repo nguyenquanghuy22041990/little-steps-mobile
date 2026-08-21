@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-// Android Emulator uses 10.0.2.2 to access host localhost. iOS simulator uses localhost.
-// Replace this with your actual local IP address (e.g., 192.168.1.X) if testing on a physical device.
 const getBaseUrl = () => {
   if (__DEV__) {
+    // Android Emulator uses 10.0.2.2, iOS Simulator uses localhost
     return Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
   }
   return 'https://api.littlesteps.com'; // Production URL placeholder
@@ -36,3 +35,17 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Helper to construct the full URL for reading media from MinIO
+export const getStorageUrl = (key: string) => {
+  const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+  return `http://${host}:9000/littlesteps-media/${key}`;
+};
+
+// Helper to fix localhost URLs from backend to point to the correct local network IP
+export const fixLocalhostUrl = (url: string) => {
+  if (Platform.OS === 'android' && url.includes('localhost')) {
+    return url.replace('localhost', '10.0.2.2');
+  }
+  return url;
+};

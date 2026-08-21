@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from '../screens/HomeScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { AddMilestoneScreen } from '../screens/AddMilestoneScreen';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -19,7 +20,19 @@ export const AppNavigator = () => {
         if (journeyId) {
           setInitialRoute('Home');
         } else {
-          setInitialRoute('Onboarding');
+          // Fallback: Check backend if profile already exists (useful if app data was cleared or testing)
+          try {
+            const { apiClient } = require('../api/client');
+            const response = await apiClient.get('/journeys');
+            if (response.data && response.data.length > 0) {
+              await AsyncStorage.setItem('journey_id', response.data[0].id);
+              setInitialRoute('Home');
+            } else {
+              setInitialRoute('Onboarding');
+            }
+          } catch (apiError) {
+            setInitialRoute('Onboarding');
+          }
         }
       } catch (e) {
         setInitialRoute('Onboarding');
@@ -58,6 +71,11 @@ export const AppNavigator = () => {
           name="Home" 
           component={HomeScreen} 
           options={{ title: 'LittleSteps' }}
+        />
+        <Stack.Screen 
+          name="AddMilestone" 
+          component={AddMilestoneScreen} 
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
