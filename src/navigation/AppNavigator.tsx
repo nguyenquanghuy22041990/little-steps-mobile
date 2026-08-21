@@ -6,6 +6,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from '../screens/HomeScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { AddMilestoneScreen } from '../screens/AddMilestoneScreen';
+import { MilestoneDetailScreen } from '../screens/MilestoneDetailScreen';
+import { EditMilestoneScreen } from '../screens/EditMilestoneScreen';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -75,6 +77,16 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="AddMilestone" 
           component={AddMilestoneScreen} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="MilestoneDetail" 
+          component={MilestoneDetailScreen} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="EditMilestone" 
+          component={EditMilestoneScreen} 
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

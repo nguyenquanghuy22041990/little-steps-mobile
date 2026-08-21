@@ -68,7 +68,25 @@ export const getChildren = async (journey_id: string): Promise<Child[]> => {
   return response.data;
 };
 
-export const getMilestones = async (journey_id: string): Promise<Milestone[]> => {
-  const response = await apiClient.get(`/milestones?journey_id=${journey_id}`);
+export const getMilestones = async (journeyId: string): Promise<Milestone[]> => {
+  const response = await apiClient.get('/milestones', { params: { journey_id: journeyId } });
   return response.data;
+};
+
+export const deleteMilestone = async (id: string): Promise<void> => {
+  await apiClient.delete(`/milestones/${id}`);
+};
+
+export const updateMilestone = async (id: string, data: any): Promise<any> => {
+  const response = await apiClient.patch(`/milestones/${id}`, data);
+  return response.data;
+};
+
+export const updateMemory = async (id: string, data: any): Promise<any> => {
+  const response = await apiClient.patch(`/memories/${id}`, data);
+  return response.data;
+};
+
+export const deleteMedia = async (id: string): Promise<void> => {
+  await apiClient.delete(`/media/${id}`);
 };

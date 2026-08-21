@@ -59,7 +59,12 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, onPress
               decelerationRate="fast"
             >
               {milestone.memories[0].media.map((mediaItem) => (
-                <View key={mediaItem.id} style={styles.photoWrapper}>
+                <TouchableOpacity 
+                  key={mediaItem.id} 
+                  style={styles.photoWrapper}
+                  activeOpacity={0.9}
+                  onPress={onPress}
+                >
                   <Image 
                     source={{ uri: getStorageUrl(mediaItem.storage_key) }} 
                     style={[
@@ -68,7 +73,7 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, onPress
                     ]} 
                     resizeMode="cover"
                   />
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           )}

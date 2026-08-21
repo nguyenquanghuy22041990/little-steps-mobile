@@ -102,7 +102,7 @@ export const HomeScreen = ({ navigation }: any) => {
       <View style={styles.timelineWrapper}>
         <Timeline 
           milestones={milestones}
-          onPressMilestone={(m) => console.log('View Milestone', m.id)}
+          onPressMilestone={(m) => navigation.navigate('MilestoneDetail', { milestone: m })}
         />
       </View>
 
