@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Plus } from 'lucide-react-native';
+import { Plus, Settings } from 'lucide-react-native';
 import { Typography } from '../components/Typography';
 import { Timeline } from '../components/Timeline';
 import { colors, spacing, radius, elevation } from '../theme';
@@ -88,14 +88,26 @@ export const HomeScreen = ({ navigation }: any) => {
       
       {/* Header Area */}
       <View style={styles.header}>
-        <Typography variant="h1" color={colors.primary}>
-          {journeyTitle}
-        </Typography>
-        {child && (
-          <Typography variant="label" color={colors.textSecondary} style={styles.age}>
-            {calculateAge(child.birthday)}
-          </Typography>
-        )}
+        <View style={styles.headerTop}>
+          <View>
+            <Typography variant="h1" color={colors.primary}>
+              {journeyTitle}
+            </Typography>
+            {child && (
+              <Typography variant="label" color={colors.textSecondary} style={styles.age}>
+                {calculateAge(child.birthday)}
+              </Typography>
+            )}
+          </View>
+          {child && (
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => navigation.navigate('Profile', { child })}
+            >
+              <Settings color={colors.primary} size={28} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Timeline List */}
@@ -144,6 +156,16 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     backgroundColor: 'rgba(250, 250, 249, 0.9)', // Translucent background to blend
     zIndex: 10,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  profileButton: {
+    padding: spacing.sm,
+    backgroundColor: 'rgba(251, 140, 116, 0.1)',
+    borderRadius: radius.full,
   },
   age: {
     marginTop: spacing.xs,

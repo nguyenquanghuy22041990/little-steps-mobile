@@ -14,6 +14,7 @@ export interface Child {
   journey_id: string;
   name: string;
   birthday: string;
+  avatar_storage_key?: string;
 }
 
 export interface Milestone {
@@ -89,4 +90,9 @@ export const updateMemory = async (id: string, data: any): Promise<any> => {
 
 export const deleteMedia = async (id: string): Promise<void> => {
   await apiClient.delete(`/media/${id}`);
+};
+
+export const updateChild = async (id: string, data: any): Promise<Child> => {
+  const response = await apiClient.patch(`/children/${id}`, data);
+  return response.data;
 };
