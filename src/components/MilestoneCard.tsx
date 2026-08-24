@@ -1,15 +1,66 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { PlayCircle } from 'lucide-react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Typography } from './Typography';
 import { Card } from './Card';
 import { colors, spacing, radius } from '../theme';
 import { Milestone } from '../api';
 import { getStorageUrl } from '../api/client';
+import { useNavigation } from '@react-navigation/native';
 
 interface MilestoneCardProps {
   milestone: Milestone;
   onPress?: () => void;
 }
+
+const MilestoneMediaItem = ({ mediaItem, onPress, isSingle }: { mediaItem: any, onPress?: () => void, isSingle: boolean }) => {
+  const source = getStorageUrl(mediaItem.storage_key);
+  const isVideo = mediaItem.type === 'VIDEO';
+  const navigation = useNavigation<any>();
+  
+  let player = null;
+  if (isVideo) {
+    player = useVideoPlayer(source, p => {
+      p.loop = true;
+    });
+  }
+
+  const handlePress = () => {
+    if (isVideo) {
+      navigation.navigate('VideoPlayer', { url: source });
+    } else if (onPress) {
+      onPress();
+    }
+  };
+
+  return (
+    <TouchableOpacity 
+      style={styles.photoWrapper}
+      activeOpacity={0.9}
+      onPress={handlePress}
+    >
+      {isVideo && player ? (
+        <View style={[styles.photo, isSingle ? styles.photoSingle : styles.photoMultiple]}>
+          <VideoView 
+            player={player} 
+            style={StyleSheet.absoluteFill} 
+            nativeControls={false}
+          />
+          <View style={styles.playIconOverlay}>
+            <PlayCircle color={colors.white} size={48} />
+          </View>
+        </View>
+      ) : (
+        <Image 
+          source={{ uri: source }} 
+          style={[styles.photo, isSingle ? styles.photoSingle : styles.photoMultiple]} 
+          resizeMode="cover"
+        />
+      )}
+    </TouchableOpacity>
+  );
+};
 
 export const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, onPress }) => {
   // Format the date to something like "Oct 15, 2024"
@@ -59,21 +110,12 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, onPress
               decelerationRate="fast"
             >
               {milestone.memories[0].media.map((mediaItem) => (
-                <TouchableOpacity 
+                <MilestoneMediaItem 
                   key={mediaItem.id} 
-                  style={styles.photoWrapper}
-                  activeOpacity={0.9}
+                  mediaItem={mediaItem} 
                   onPress={onPress}
-                >
-                  <Image 
-                    source={{ uri: getStorageUrl(mediaItem.storage_key) }} 
-                    style={[
-                      styles.photo, 
-                      milestone.memories![0].media!.length === 1 ? styles.photoSingle : styles.photoMultiple
-                    ]} 
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
+                  isSingle={milestone.memories![0].media!.length === 1}
+                />
               ))}
             </ScrollView>
           )}
@@ -155,5 +197,15 @@ const styles = StyleSheet.create({
   },
   photoMultiple: {
     width: 250, // Slightly cropped to hint at horizontal scrolling
+  },
+  playIconOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
   }
 });

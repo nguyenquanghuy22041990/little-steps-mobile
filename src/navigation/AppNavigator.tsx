@@ -8,6 +8,7 @@ import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { AddMilestoneScreen } from '../screens/AddMilestoneScreen';
 import { MilestoneDetailScreen } from '../screens/MilestoneDetailScreen';
 import { EditMilestoneScreen } from '../screens/EditMilestoneScreen';
+import { VideoPlayerScreen } from '../screens/VideoPlayerScreen';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -88,6 +89,11 @@ export const AppNavigator = () => {
           name="EditMilestone" 
           component={EditMilestoneScreen} 
           options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="VideoPlayer" 
+          component={VideoPlayerScreen} 
+          options={{ headerShown: false, presentation: 'fullScreenModal' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

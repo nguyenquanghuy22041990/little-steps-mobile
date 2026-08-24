@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, Platform } from 'react-native';
 import { X, ArrowLeft, ImagePlus } from 'lucide-react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +12,11 @@ import { Button } from '../components/Button';
 import { colors, spacing, radius } from '../theme';
 import { updateMilestone, updateMemory, deleteMedia, Milestone } from '../api';
 import { apiClient, getStorageUrl } from '../api/client';
+
+const FormVideoThumbnail = ({ uri }: { uri: string }) => {
+  const player = useVideoPlayer(uri, p => { p.muted = true; });
+  return <VideoView player={player} style={StyleSheet.absoluteFill} nativeControls={false} />;
+};
 
 export const EditMilestoneScreen = ({ route, navigation }: any) => {
   const { milestone } = route.params as { milestone: Milestone };
@@ -36,14 +42,28 @@ export const EditMilestoneScreen = ({ route, navigation }: any) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ['images', 'videos'],
       allowsMultipleSelection: true,
       selectionLimit: 10 - existingMedia.length - newImages.length, // Max 10 total
       quality: 0.8,
     });
 
     if (!result.canceled) {
-      setNewImages(prev => [...prev, ...result.assets]);
+      const validAssets: ImagePicker.ImagePickerAsset[] = [];
+      for (const asset of result.assets) {
+        const isVideo = asset.type === 'video';
+        const sizeLimit = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+        
+        if (asset.fileSize && asset.fileSize > sizeLimit) {
+          Alert.alert(
+            'File too large',
+            `${asset.fileName || 'A file'} exceeds the ${isVideo ? '50MB' : '10MB'} limit and was not added.`
+          );
+        } else {
+          validAssets.push(asset);
+        }
+      }
+      setNewImages(prev => [...prev, ...validAssets]);
     }
   };
 
@@ -94,7 +114,8 @@ export const EditMilestoneScreen = ({ route, navigation }: any) => {
           // Get presigned URL
           const presignedRes = await apiClient.post('/storage/presigned-url', {
             extension: fileName.split('.').pop() || 'jpg',
-            mimeType: mimeType
+            mimeType: mimeType,
+            fileSize: asset.fileSize || blob.size || 0,
           });
           
           const { uploadUrl, storageKey } = presignedRes.data;
@@ -111,7 +132,7 @@ export const EditMilestoneScreen = ({ route, navigation }: any) => {
           // Save to database
           await apiClient.post('/media', {
             memory_id: memory.id,
-            type: 'IMAGE',
+            type: asset.type === 'video' ? 'VIDEO' : 'IMAGE',
             storage_key: storageKey,
             mime_type: mimeType,
             file_name: fileName,
@@ -219,8 +240,12 @@ export const EditMilestoneScreen = ({ route, navigation }: any) => {
 
             {/* Existing Media */}
             {existingMedia.map((media) => (
-              <View key={`existing-${media.id}`} style={styles.imageWrapper}>
-                <Image source={{ uri: getStorageUrl(media.storage_key) }} style={styles.previewImage} />
+              <View key={`existing-${media.id}`} style={[styles.imageWrapper, styles.previewImage]}>
+                {media.type === 'VIDEO' ? (
+                  <FormVideoThumbnail uri={getStorageUrl(media.storage_key)} />
+                ) : (
+                  <Image source={{ uri: getStorageUrl(media.storage_key) }} style={StyleSheet.absoluteFill} />
+                )}
                 <TouchableOpacity 
                   style={styles.removeImageBtn}
                   onPress={() => handleRemoveExistingMedia(media.id)}
@@ -232,8 +257,12 @@ export const EditMilestoneScreen = ({ route, navigation }: any) => {
 
             {/* New Images */}
             {newImages.map((asset, index) => (
-              <View key={`new-${index}`} style={styles.imageWrapper}>
-                <Image source={{ uri: asset.uri }} style={styles.previewImage} />
+              <View key={`new-${index}`} style={[styles.imageWrapper, styles.previewImage]}>
+                {asset.type === 'video' ? (
+                  <FormVideoThumbnail uri={asset.uri} />
+                ) : (
+                  <Image source={{ uri: asset.uri }} style={StyleSheet.absoluteFill} />
+                )}
                 <TouchableOpacity 
                   style={styles.removeImageBtn}
                   onPress={() => handleRemoveNewImage(index)}
@@ -330,6 +359,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: radius.md,
+    overflow: 'hidden',
   },
   removeImageBtn: {
     position: 'absolute',

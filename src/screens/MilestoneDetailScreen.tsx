@@ -1,11 +1,36 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Pencil, Trash2, PlayCircle } from 'lucide-react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Typography } from '../components/Typography';
 import { colors, spacing, radius } from '../theme';
 import { getStorageUrl } from '../api/client';
 import { Milestone, deleteMilestone } from '../api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const MediaItem = ({ media }: { media: any }) => {
+  const source = getStorageUrl(media.storage_key);
+  
+  if (media.type === 'VIDEO') {
+    const player = useVideoPlayer(source, player => {
+      player.loop = true;
+      player.play();
+    });
+
+    return (
+      <VideoView 
+        player={player} 
+        style={styles.photo} 
+        nativeControls={true}
+        allowsPictureInPicture
+      />
+    );
+  }
+
+  return (
+    <Image source={{ uri: source }} style={styles.photo} resizeMode="cover" />
+  );
+};
 
 export const MilestoneDetailScreen = ({ route, navigation }: any) => {
   const { milestone } = route.params as { milestone: Milestone };
@@ -85,15 +110,11 @@ export const MilestoneDetailScreen = ({ route, navigation }: any) => {
           </Typography>
         ) : null}
 
+        {/* Media */}
         {mediaList.length > 0 && (
           <View style={styles.photoContainer}>
-            {mediaList.map((media) => (
-              <Image
-                key={media.id}
-                source={{ uri: getStorageUrl(media.storage_key) }}
-                style={styles.photo}
-                resizeMode="cover"
-              />
+            {mediaList.map((media: any) => (
+              <MediaItem key={media.id} media={media} />
             ))}
           </View>
         )}

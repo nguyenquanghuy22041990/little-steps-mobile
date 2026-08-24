@@ -9,6 +9,7 @@ import {
   Image,
   Alert
 } from 'react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Camera, Image as ImageIcon, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -22,6 +23,11 @@ import { colors, spacing, radius } from '../theme';
 import { apiClient, fixLocalhostUrl } from '../api/client';
 
 const MAX_DATE = new Date();
+
+const FormVideoThumbnail = ({ uri }: { uri: string }) => {
+  const player = useVideoPlayer(uri, p => { p.muted = true; });
+  return <VideoView player={player} style={StyleSheet.absoluteFill} nativeControls={false} />;
+};
 
 export const AddMilestoneScreen = ({ navigation }: any) => {
   const [title, setTitle] = useState('');
@@ -41,14 +47,29 @@ export const AddMilestoneScreen = ({ navigation }: any) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ['images', 'videos'],
       allowsMultipleSelection: true,
-      selectionLimit: 5,
+      selectionLimit: 10 - selectedImages.length, // Max 10 total
       quality: 0.8,
     });
 
-    if (!result.canceled && result.assets) {
-      setSelectedImages([...selectedImages, ...result.assets].slice(0, 5)); // Cap at 5 images for MVP
+    if (!result.canceled) {
+      // Validate sizes
+      const validAssets: ImagePicker.ImagePickerAsset[] = [];
+      for (const asset of result.assets) {
+        const isVideo = asset.type === 'video';
+        const sizeLimit = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+        
+        if (asset.fileSize && asset.fileSize > sizeLimit) {
+          Alert.alert(
+            'File too large',
+            `${asset.fileName || 'A file'} exceeds the ${isVideo ? '50MB' : '10MB'} limit and was not added.`
+          );
+        } else {
+          validAssets.push(asset);
+        }
+      }
+      setSelectedImages(prev => [...prev, ...validAssets]);
     }
   };
 
@@ -93,16 +114,17 @@ export const AddMilestoneScreen = ({ navigation }: any) => {
           const mimeType = asset.mimeType || (extension === 'png' ? 'image/png' : 'image/jpeg');
           const fileName = asset.fileName || `photo_${Date.now()}.${extension}`;
           
+          // Fetch the local file as a Blob
+          const fileResp = await fetch(uri);
+          const blob = await fileResp.blob();
+
           // Get Presigned URL from Backend
           const presignedRes = await apiClient.post('/storage/presigned-url', {
             mimeType,
             extension,
+            fileSize: asset.fileSize || blob.size || 0,
           });
           const { uploadUrl, storageKey } = presignedRes.data;
-
-          // Fetch the local file as a Blob
-          const fileResp = await fetch(uri);
-          const blob = await fileResp.blob();
 
           // Fix localhost for Android emulator
           const finalUploadUrl = fixLocalhostUrl(uploadUrl);
@@ -116,10 +138,10 @@ export const AddMilestoneScreen = ({ navigation }: any) => {
             },
           });
 
-          // Save the storageKey to the database with required metadata
+          // Save to database
           await apiClient.post('/media', {
             memory_id: memoryId,
-            type: 'IMAGE',
+            type: asset.type === 'video' ? 'VIDEO' : 'IMAGE',
             storage_key: storageKey,
             mime_type: mimeType,
             file_name: fileName,
@@ -234,7 +256,11 @@ export const AddMilestoneScreen = ({ navigation }: any) => {
           <View style={styles.photoGrid}>
             {selectedImages.map((asset, index) => (
               <View key={index} style={styles.thumbnailContainer}>
-                <Image source={{ uri: asset.uri }} style={styles.thumbnail} />
+                {asset.type === 'video' ? (
+                  <FormVideoThumbnail uri={asset.uri} />
+                ) : (
+                  <Image source={{ uri: asset.uri }} style={styles.thumbnail} />
+                )}
                 <TouchableOpacity 
                   style={styles.removeButton}
                   onPress={() => removeImage(index)}
