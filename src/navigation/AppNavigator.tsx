@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AuthContext } from '../context/AuthContext';
+
+import { LoginScreen } from '../screens/LoginScreen';
+import { RegisterScreen } from '../screens/RegisterScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { AddMilestoneScreen } from '../screens/AddMilestoneScreen';
@@ -12,9 +16,22 @@ import { VideoPlayerScreen } from '../screens/VideoPlayerScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { colors } from '../theme';
 
-const Stack = createNativeStackNavigator();
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+};
 
-export const AppNavigator = () => {
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const MainStack = createNativeStackNavigator();
+
+const AuthNavigator = () => (
+  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Screen name="Login" component={LoginScreen} />
+    <AuthStack.Screen name="Register" component={RegisterScreen} />
+  </AuthStack.Navigator>
+);
+
+const MainNavigator = () => {
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,7 +41,6 @@ export const AppNavigator = () => {
         if (journeyId) {
           setInitialRoute('Home');
         } else {
-          // Fallback: Check backend if profile already exists (useful if app data was cleared or testing)
           try {
             const { apiClient } = require('../api/client');
             const response = await apiClient.get('/journeys');
@@ -54,54 +70,40 @@ export const AppNavigator = () => {
   }
 
   return (
+    <MainStack.Navigator
+      initialRouteName={initialRoute as any}
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.textPrimary,
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: colors.background }
+      }}
+    >
+      <MainStack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+      <MainStack.Screen name="Home" component={HomeScreen} options={{ title: 'LittleSteps' }} />
+      <MainStack.Screen name="AddMilestone" component={AddMilestoneScreen} options={{ headerShown: false }} />
+      <MainStack.Screen name="MilestoneDetail" component={MilestoneDetailScreen} options={{ headerShown: false }} />
+      <MainStack.Screen name="EditMilestone" component={EditMilestoneScreen} options={{ headerShown: false }} />
+      <MainStack.Screen name="VideoPlayer" component={VideoPlayerScreen} options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+      <MainStack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+    </MainStack.Navigator>
+  );
+};
+
+export const AppNavigator = () => {
+  const { user, isLoading } = useContext(AuthContext);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={initialRoute as any}
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: colors.surface,
-          },
-          headerTintColor: colors.textPrimary,
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: colors.background }
-        }}
-      >
-        <Stack.Screen 
-          name="Onboarding" 
-          component={OnboardingScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ title: 'LittleSteps' }}
-        />
-        <Stack.Screen 
-          name="AddMilestone" 
-          component={AddMilestoneScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="MilestoneDetail" 
-          component={MilestoneDetailScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="EditMilestone" 
-          component={EditMilestoneScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="VideoPlayer" 
-          component={VideoPlayerScreen} 
-          options={{ headerShown: false, presentation: 'fullScreenModal' }}
-        />
-        <Stack.Screen 
-          name="Profile" 
-          component={ProfileScreen} 
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
+      {user ? <MainNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 };

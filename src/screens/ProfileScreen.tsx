@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Platform } from 'react-native';
-import { ArrowLeft, Camera } from 'lucide-react-native';
+import { ArrowLeft, Camera, LogOut } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,9 +10,11 @@ import { Button } from '../components/Button';
 import { colors, spacing, radius } from '../theme';
 import { updateChild, Child } from '../api';
 import { apiClient, getStorageUrl } from '../api/client';
+import { AuthContext } from '../context/AuthContext';
 
 export const ProfileScreen = ({ route, navigation }: any) => {
   const { child } = route.params as { child: Child };
+  const { logout } = useContext(AuthContext);
   
   const [name, setName] = useState(child.name);
   const [date, setDate] = useState(new Date(child.birthday));
@@ -184,6 +186,18 @@ export const ProfileScreen = ({ route, navigation }: any) => {
           onPress={handleSave} 
           loading={loading}
         />
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={() => {
+            Alert.alert('Log Out', 'Are you sure you want to log out?', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Log Out', style: 'destructive', onPress: () => logout() }
+            ]);
+          }}
+        >
+          <LogOut color={colors.error} size={20} />
+          <Typography color={colors.error} style={styles.logoutText}>Log Out</Typography>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -270,5 +284,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  logoutText: {
+    marginLeft: spacing.sm,
+    fontWeight: 'bold',
   }
 });

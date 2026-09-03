@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getBaseUrl = () => {
   if (__DEV__) {
@@ -18,11 +19,17 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
-// Interceptor for logging in DEV mode
-apiClient.interceptors.request.use((request) => {
+// Interceptor for logging in DEV mode and attaching token
+apiClient.interceptors.request.use(async (request) => {
   if (__DEV__) {
     console.log(`[API Request] ${request.method?.toUpperCase()} ${request.url}`);
   }
+  
+  const token = await AsyncStorage.getItem('userToken');
+  if (token) {
+    request.headers.Authorization = `Bearer ${token}`;
+  }
+  
   return request;
 });
 

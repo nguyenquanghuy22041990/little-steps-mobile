@@ -1,6 +1,5 @@
 import { apiClient } from './client';
 
-export const USER_ID_DUMMY = 'd1b764cb-58a4-47ed-87cb-1555df6d0b57';
 
 export interface Journey {
   id: string;
@@ -44,7 +43,6 @@ export interface Media {
 
 export const createJourney = async (title: string): Promise<Journey> => {
   const response = await apiClient.post('/journeys', {
-    user_id: USER_ID_DUMMY,
     title,
   });
   return response.data;
