@@ -46,8 +46,10 @@ export const LoginScreen = () => {
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log in</Text>}
       </TouchableOpacity>
       
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.linkText}>Don't have an account? Sign up</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.linkContainer}>
+        <Text style={styles.linkText}>
+          Don't have an account? <Text style={styles.linkActionText}>Sign up</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -59,5 +61,7 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: '#ddd', padding: 16, borderRadius: 12, marginBottom: 16, fontSize: 16 },
   button: { backgroundColor: '#FF6B6B', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 8 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  linkText: { color: '#666', textAlign: 'center', marginTop: 24, fontSize: 14 }
+  linkContainer: { marginTop: 24, alignItems: 'center' },
+  linkText: { color: '#666', fontSize: 14 },
+  linkActionText: { color: '#007AFF', fontWeight: 'bold', textDecorationLine: 'underline' }
 });
